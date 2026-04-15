@@ -1,11 +1,8 @@
 // ============================================================
 // DEMO WORLD: POWER CLIMB
-// FULL FIXED VERSION
-// - Score visible on Game Over
-// - Sound restored
-// - Trump-like satire doodle restored
-// - Oil collectibles
-// - Popups
+// COMPLETE LEVEL SYSTEM UPDATE
+// Trump Theme + Mystery Island Endless Mode
+// Paste into script.js
 // ============================================================
 
 const canvas = document.getElementById("gameCanvas");
@@ -93,6 +90,53 @@ const PLATFORM_GAP = 90;
 const SCORE_PER_PX = 0.05;
 
 // ============================================================
+// LEVEL DATA
+// ============================================================
+
+const levelNames = [
+  "Trump Tower",
+  "Mar-a-Lago",
+  "Miami Rally",
+  "Palm Beach",
+  "Wall Street",
+  "Washington Run",
+  "Capitol Heights",
+  "Air Force Rise",
+  "Global Summit",
+  "White House"
+];
+
+const endlessName = "Mystery Island";
+
+// Progressive thresholds
+const thresholds = [
+  0,
+  100,
+  300,
+  600,
+  1000,
+  1500,
+  2100,
+  2800,
+  3600,
+  4500
+];
+
+const bgColors = [
+  "#1a1a2e",
+  "#3b1f0b",
+  "#ff4d6d",
+  "#ff914d",
+  "#14532d",
+  "#1d3557",
+  "#f8f9fa",
+  "#4ea8de",
+  "#5a189a",
+  "#111111",
+  "#2b003d"
+];
+
+// ============================================================
 // STATE
 // ============================================================
 
@@ -106,26 +150,29 @@ let popups;
 let score = 0;
 let bestScore = 0;
 let level = 1;
+let lastLevel = 1;
 let lives = 3;
 
 let cameraY = 0;
 let keys = {};
 let animId;
+let bgColor = bgColors[0];
 
 // ============================================================
-// START
+// START GAME
 // ============================================================
 
 function startGame() {
   startScr.classList.remove("active");
   gameoverScr.classList.remove("active");
 
-  state = "playing";
-
   score = 0;
+  bestScore = bestScore || 0;
   level = 1;
+  lastLevel = 1;
   lives = 3;
   cameraY = 0;
+  bgColor = bgColors[0];
 
   platforms = [];
   oils = [];
@@ -139,7 +186,6 @@ function startGame() {
     h: 48,
     vx: 0,
     vy: 0,
-    facing: 1,
     frame: 0,
     timer: 0
   };
@@ -148,6 +194,8 @@ function startGame() {
   spawnOil(6);
 
   updateHUD();
+
+  state = "playing";
 
   cancelAnimationFrame(animId);
   loop();
@@ -191,15 +239,8 @@ function handleInput() {
 
   player.vx = 0;
 
-  if (left) {
-    player.vx = -PLAYER_SPEED;
-    player.facing = -1;
-  }
-
-  if (right) {
-    player.vx = PLAYER_SPEED;
-    player.facing = 1;
-  }
+  if (left) player.vx = -PLAYER_SPEED;
+  if (right) player.vx = PLAYER_SPEED;
 }
 
 // ============================================================
@@ -207,7 +248,7 @@ function handleInput() {
 // ============================================================
 
 function updatePlayer() {
-  player.vy += GRAVITY;
+  player.vy += GRAVITY + Math.max(0, (score - 4500) * 0.00004);
 
   player.x += player.vx;
   player.y += player.vy;
@@ -226,28 +267,12 @@ function updatePlayer() {
         player.y = p.y - player.h;
         player.vy = JUMP_FORCE;
         sfx.jump();
-
-        spawnParticles(
-          player.x + player.w / 2,
-          player.y + player.h,
-          "#4a9eff",
-          6
-        );
-
         break;
       }
     }
   }
 
-  player.timer++;
-  if (player.timer > 8) {
-    player.timer = 0;
-    player.frame ^= 1;
-  }
-
-  if (player.y - cameraY > H + 50) {
-    loseLife();
-  }
+  if (player.y - cameraY > H + 60) loseLife();
 }
 
 // ============================================================
@@ -256,7 +281,6 @@ function updatePlayer() {
 
 function loseLife() {
   lives--;
-
   updateHUD();
 
   if (lives <= 0) {
@@ -276,13 +300,11 @@ function loseLife() {
 function updateCamera() {
   const targetY = player.y - H * 0.45;
 
-  if (targetY < cameraY) {
-    cameraY = targetY;
-  }
+  if (targetY < cameraY) cameraY = targetY;
 }
 
 // ============================================================
-// SCORE
+// SCORE + LEVELS
 // ============================================================
 
 function updateScore() {
@@ -290,11 +312,57 @@ function updateScore() {
 
   if (climb > score) {
     score = climb;
-    updateHUD();
   }
 
-  level = Math.floor(score / 250) + 1;
-  levelEl.textContent = level;
+  level = 1;
+
+  for (let i = 0; i < thresholds.length; i++) {
+    if (score >= thresholds[i]) {
+      level = i + 1;
+    }
+  }
+
+  if (level > 10) level = 10;
+
+  // level up detected
+  if (level !== lastLevel) {
+    sfx.level();
+
+    if (level < 10) {
+      showPopup(levelNames[level - 1], 90, cameraY + 250);
+    } else {
+      showPopup("WHITE HOUSE REACHED", 60, cameraY + 250);
+      showPopup("MYSTERY ISLAND UNLOCKED", 40, cameraY + 290);
+    }
+
+    lastLevel = level;
+  }
+
+  // background update
+  if (score < 4500) {
+    bgColor = bgColors[level - 1];
+  } else {
+    bgColor = bgColors[10];
+  }
+
+  updateHUD();
+}
+
+// ============================================================
+// HUD
+// ============================================================
+
+function updateHUD() {
+  scoreEl.textContent = score;
+  livesEl.textContent = lives;
+
+  if (score < 4500) {
+    levelEl.textContent =
+      "LVL " + level + " - " + levelNames[level - 1];
+  } else {
+    levelEl.textContent =
+      "LVL 10 - " + endlessName;
+  }
 }
 
 // ============================================================
@@ -326,7 +394,7 @@ function updatePlatforms() {
     }
   }
 
-  platforms = platforms.filter(p => p.y - cameraY < H + 60);
+  platforms = platforms.filter(p => p.y - cameraY < H + 80);
 }
 
 // ============================================================
@@ -358,24 +426,15 @@ function updateOil() {
     ) {
       score += o.value;
 
+      sfx.oil();
+
       showPopup(
         o.golden ? "BLACK GOLD +20" : "OIL +5",
         o.x,
         o.y
       );
 
-      spawnParticles(
-        o.x,
-        o.y,
-        o.golden ? "#ffd700" : "#111",
-        10
-      );
-
-      sfx.oil();
-
       oils.splice(i, 1);
-
-      updateHUD();
     }
 
     if (o.y - cameraY > H + 40) oils.splice(i, 1);
@@ -393,13 +452,13 @@ function showPopup(text, x, y) {
     text,
     x,
     y,
-    life: 60
+    life: 80
   });
 }
 
 function updatePopups() {
   for (let p of popups) {
-    p.y -= 0.5;
+    p.y -= 0.4;
     p.life--;
   }
 
@@ -410,38 +469,16 @@ function updatePopups() {
 // PARTICLES
 // ============================================================
 
-function spawnParticles(x, y, color, n = 8) {
-  for (let i = 0; i < n; i++) {
-    particles.push({
-      x,
-      y,
-      vx: rand(-2, 2),
-      vy: rand(-4, -1),
-      life: 1,
-      decay: 0.03,
-      size: rand(3, 7),
-      color
-    });
-  }
-}
+function updateParticles() {}
 
-function updateParticles() {
-  for (let p of particles) {
-    p.x += p.vx;
-    p.y += p.vy;
-    p.vy += 0.15;
-    p.life -= p.decay;
-  }
-
-  particles = particles.filter(p => p.life > 0);
-}
+function drawParticles() {}
 
 // ============================================================
 // DRAW
 // ============================================================
 
 function draw() {
-  ctx.fillStyle = "#12122a";
+  ctx.fillStyle = bgColor;
   ctx.fillRect(0, 0, W, H);
 
   ctx.save();
@@ -451,28 +488,27 @@ function draw() {
   for (let o of oils) drawOil(o);
 
   drawPlayer();
-
-  for (let p of particles) drawParticle(p);
-
   drawPopups();
 
   ctx.restore();
 }
 
-// ============================================================
-// DRAW PLATFORM
-// ============================================================
-
 function drawPlatform(p) {
   ctx.fillStyle = "#4a9eff";
   ctx.fillRect(p.x, p.y, p.w, p.h);
+}
 
-  ctx.fillStyle = "rgba(255,255,255,0.3)";
-  ctx.fillRect(p.x + 2, p.y + 2, p.w - 4, 3);
+function drawOil(o) {
+  ctx.fillStyle = o.golden ? "#ffd700" : "#111";
+  ctx.fillRect(o.x, o.y, o.w, o.h);
+
+  ctx.fillStyle = "#fff";
+  ctx.font = "10px Arial";
+  ctx.fillText("🛢", o.x + 3, o.y + 18);
 }
 
 // ============================================================
-// DRAW PLAYER (SATIRE VERSION)
+// PLAYER SATIRE DRAW
 // ============================================================
 
 function drawPlayer() {
@@ -481,76 +517,33 @@ function drawPlayer() {
   const w = player.w;
   const h = player.h;
 
-  // suit
   ctx.fillStyle = "#2c3e50";
   ctx.fillRect(x + 6, y + 22, w - 12, h - 22);
 
-  // tie
   ctx.fillStyle = "#e74c3c";
   ctx.fillRect(x + 16, y + 24, 4, 18);
 
-  // face
   ctx.fillStyle = "#f5cba7";
   ctx.fillRect(x + 8, y + 4, w - 16, 18);
 
-  // iconic blonde hair
   ctx.fillStyle = "#f1c40f";
   ctx.fillRect(x + 5, y + 1, w - 10, 5);
   ctx.fillRect(x + 3, y + 4, 7, 4);
 
-  // eyes
   ctx.fillStyle = "#111";
   ctx.fillRect(x + 12, y + 10, 3, 3);
   ctx.fillRect(x + 22, y + 10, 3, 3);
 
-  // mouth
-  ctx.fillStyle = "#c0392b";
-  ctx.fillRect(x + 12, y + 16, 12, 2);
-
-  // arms
-  ctx.fillStyle = "#2c3e50";
   ctx.fillRect(x + 1, y + 25, 6, 12);
   ctx.fillRect(x + w - 7, y + 25, 6, 12);
 
-  // legs
   ctx.fillRect(x + 10, y + 40, 6, 8);
   ctx.fillRect(x + 20, y + 40, 6, 8);
 }
 
-// ============================================================
-// DRAW OIL
-// ============================================================
-
-function drawOil(o) {
-  ctx.fillStyle = o.golden ? "#ffd700" : "#111";
-  ctx.fillRect(o.x, o.y, o.w, o.h);
-
-  ctx.fillStyle = "#888";
-  ctx.fillRect(o.x + 4, o.y + 4, o.w - 8, 4);
-
-  ctx.fillStyle = "#fff";
-  ctx.font = "10px Arial";
-  ctx.fillText("🛢", o.x + 3, o.y + 18);
-}
-
-// ============================================================
-// PARTICLES
-// ============================================================
-
-function drawParticle(p) {
-  ctx.globalAlpha = p.life;
-  ctx.fillStyle = p.color;
-  ctx.fillRect(p.x, p.y, p.size, p.size);
-  ctx.globalAlpha = 1;
-}
-
-// ============================================================
-// POPUPS
-// ============================================================
-
 function drawPopups() {
   for (let p of popups) {
-    ctx.globalAlpha = p.life / 60;
+    ctx.globalAlpha = p.life / 80;
     ctx.fillStyle = "#ffd700";
     ctx.font = "bold 14px Arial";
     ctx.fillText(p.text, p.x, p.y);
@@ -559,22 +552,11 @@ function drawPopups() {
 }
 
 // ============================================================
-// HUD
-// ============================================================
-
-function updateHUD() {
-  scoreEl.textContent = score;
-  levelEl.textContent = level;
-  livesEl.textContent = lives;
-}
-
-// ============================================================
 // GAME OVER
 // ============================================================
 
 function gameOver() {
   state = "ended";
-
   cancelAnimationFrame(animId);
 
   if (score > bestScore) bestScore = score;
@@ -588,7 +570,7 @@ function gameOver() {
 }
 
 // ============================================================
-// INPUT
+// INPUT EVENTS
 // ============================================================
 
 document.addEventListener("keydown", e => {
@@ -597,18 +579,6 @@ document.addEventListener("keydown", e => {
 
 document.addEventListener("keyup", e => {
   keys[e.key] = false;
-});
-
-canvas.addEventListener("touchstart", e => {
-  for (let t of e.touches) {
-    if (t.clientX < W / 2) keys["ArrowLeft"] = true;
-    else keys["ArrowRight"] = true;
-  }
-});
-
-canvas.addEventListener("touchend", () => {
-  keys["ArrowLeft"] = false;
-  keys["ArrowRight"] = false;
 });
 
 // ============================================================
