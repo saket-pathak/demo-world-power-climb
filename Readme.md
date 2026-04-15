@@ -1,51 +1,66 @@
-# DemoWorld
+# 🏛️ Demo World: Power Climb
 
-A fun browser-based arcade climbing game where players control a character trying to rise upward through temporary platforms while surviving increasing chaos.
+A Whirlybird-inspired browser-based platform jumper built for offline hackathon use.
 
-This project is currently under active development for hackathon/demo purposes.
+## How to Play
+- **Arrow Keys / A-D**: Move left & right
+- **Mobile**: Tap left/right half of screen
+- Land on platforms to jump automatically — keep climbing!
 
-## Current Concept
+## Platform Types
+| Color | Type | Behavior |
+|-------|------|----------|
+| 🔵 Blue | Normal | Safe, solid |
+| 🟡 Yellow | Moving | Slides left/right |
+| 🔴 Red | Breaking | Crumbles after you land |
+| 🟢 Green | Boost | Super jump! |
 
-* One tap / one click controls
-* Endless upward climbing gameplay
-* Platforms disappear over time
-* Difficulty increases as score rises
-* Meme-inspired political emoji characters
-* Funny text popups and satire elements
-* Mobile + desktop browser support
+## Levels
+1. Town Hall
+2. City Square
+3. Parliament
+4. Power Tower
+5. Summit (final)
 
-## Planned Features
+## Customizing the Character
+Replace `assets/images/player.png` with your political doodle:
+- Recommended size: **36×48px** (pixel art style)
+- Transparent background (PNG)
+- The game auto-detects and uses your image
 
-* Character selection
-* Scoreboard / high score
-* Sound effects
-* Animated UI
-* Different platform types
-* Obstacles and traps
-* Better graphics
-* Responsive mobile controls
+## Customizing Platforms
+Replace `assets/images/platform.png`:
+- Recommended size: **70×14px**
+- Used only for `normal` type platforms
 
-## Tech Stack
+## Adding Sounds
+Drop your audio into `assets/audio/`:
+- `jump.mp3` — played on every jump
+- `score.mp3` — played on level-up
 
-* HTML
-* CSS
-* JavaScript
-* Canvas API (if needed)
+> The game uses Web Audio API as fallback, so it works even without audio files.
 
-## Project Status
+## Running Offline
+Just open `index.html` in any browser — no server needed!
 
-🚧 Early Prototype Stage
-
-Core gameplay mechanics are being built first. Graphics, sounds, polish, and final branding will be improved later.
-
-## Goal
-
-Create a fun, humorous, fast-loading browser game that people can instantly play during demos, hackathons, and casual events.
-
-## Run Locally
-
-Just open `index.html` in a browser.
-
-## Note
-
-This README is temporary and will be redesigned after the project reaches a stable version.
+## Project Structure
+```
+demo-world-power-climb/
+├── index.html
+├── style.css
+├── script.js
+├── assets/
+│   ├── audio/
+│   │   ├── jump.mp3
+│   │   └── score.mp3
+│   ├── icons/
+│   │   ├── emoji1.png
+│   │   ├── emoji2.png
+│   │   └── emoji3.png
+│   └── images/
+│       ├── platform.png
+│       └── player.png
+└── data/
+    ├── levels.json
+    └── text.json
+```
