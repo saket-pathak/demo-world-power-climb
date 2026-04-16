@@ -1,0 +1,30 @@
+{
+  "ui": {
+    "title": "DEMO WORLD",
+    "subtitle": "POWER CLIMB",
+    "startBtn": "▶ START GAME",
+    "restartBtn": "↺ PLAY AGAIN",
+    "gameOver": "GAME OVER",
+    "youWin": "YOU WIN!",
+    "score": "Score",
+    "bestScore": "Best",
+    "level": "LVL",
+    "lives": "Lives",
+    "tagline": "Jump your way to the top!",
+    "offlineNote": "No internet? No problem.",
+    "controls": "← → Arrow Keys / A D | Mobile: Tap sides"
+  },
+  "platformTypes": {
+    "normal": "Solid ground — safe!",
+    "moving": "Moves side to side — time your jump!",
+    "breaking": "Crumbles after landing — jump fast!",
+    "boost": "Super jump pad — launches you high!"
+  },
+  "levelIntros": {
+    "1": "Your political journey begins...",
+    "2": "The crowds are watching!",
+    "3": "Parliament awaits!",
+    "4": "Power corrupts — and breaks platforms.",
+    "5": "Final climb to the Summit!"
+  }
+}
