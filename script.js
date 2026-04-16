@@ -1,12 +1,11 @@
 // ============================================================
-// DEMO WORLD: POWER CLIMB — FINAL MERGED script.js
-// Includes:
-// ✅ Pause Button
-// ✅ Restart Button
-// ✅ Fixed Multi-Life Heart System
-// ✅ Better Player Sprite Rendering
-// ✅ Sounds
-// ✅ Level Progression
+// DEMO WORLD: POWER CLIMB — COMPLETE CORRECTED script.js
+// Fixed:
+// ✅ Reachable endless platforms
+// ✅ Level names shown
+// ✅ Correct player sprite loading
+// ✅ Pause + Restart buttons
+// ✅ Heart lives work properly
 // ============================================================
 
 const canvas = document.getElementById("gameCanvas");
@@ -154,13 +153,11 @@ function setupUIButtons() {
     if (!paused) loop();
   };
 
-  restartBtn.onclick = () => {
-    startGame();
-  };
+  restartBtn.onclick = () => startGame();
 }
 
 // ============================================================
-// START GAME
+// START
 // ============================================================
 
 function startGame() {
@@ -239,7 +236,7 @@ function update() {
         player.x + player.w > p.x &&
         player.x < p.x + p.w &&
         player.y + player.h > p.y &&
-        player.y + player.h < p.y + p.h + 10
+        player.y + player.h < p.y + p.h + 12
       ) {
         player.y = p.y - player.h;
         player.vy = JUMP_FORCE;
@@ -248,7 +245,7 @@ function update() {
     }
   }
 
-  // camera
+  // camera follows upward
   const targetY = player.y - H * 0.45;
   if (targetY < cameraY) cameraY = targetY;
 
@@ -259,13 +256,11 @@ function update() {
   level = Math.floor(score / 100) + 1;
   if (level > 10) level = 10;
 
-  // hearts
+  updatePlatforms();
   updateHearts();
-
-  // oils
   updateOils();
 
-  // death
+  // fall death
   if (player.y - cameraY > H + 80) loseLife();
 
   updateHUD();
@@ -279,7 +274,7 @@ function handleInput() {
 }
 
 // ============================================================
-// LIFE SYSTEM (FIXED)
+// LIFE SYSTEM
 // ============================================================
 
 function loseLife() {
@@ -293,10 +288,8 @@ function loseLife() {
   }
 
   player.invincible = 120;
-
   player.x = W / 2 - player.w / 2;
   player.y = cameraY + H / 2;
-  player.vx = 0;
   player.vy = JUMP_FORCE;
 }
 
@@ -306,8 +299,77 @@ function loseLife() {
 
 function updateHUD() {
   scoreEl.textContent = score;
-  levelEl.textContent = "LVL " + level;
+
+  const names = [
+    "Trump Tower",
+    "Mar-a-Lago",
+    "Miami Rally",
+    "Palm Beach",
+    "Wall Street",
+    "Washington Run",
+    "Capitol Heights",
+    "Air Force Rise",
+    "Global Summit",
+    "White House"
+  ];
+
+  levelEl.textContent =
+    "LVL " + level + " - " + names[level - 1];
+
   livesEl.textContent = "❤️ x " + lives;
+}
+
+// ============================================================
+// PLATFORM SYSTEM (FIXED)
+// ============================================================
+
+function generatePlatforms() {
+  let y = H - 30;
+  let prevX = W / 2 - 35;
+
+  for (let i = 0; i < 12; i++) {
+    let x = rand(
+      Math.max(10, prevX - 100),
+      Math.min(W - 80, prevX + 100)
+    );
+
+    platforms.push({
+      x,
+      y,
+      w: 70,
+      h: 14
+    });
+
+    prevX = x;
+    y -= 85;
+  }
+}
+
+function updatePlatforms() {
+  let top = platforms.reduce((a, b) =>
+    a.y < b.y ? a : b
+  );
+
+  while (top.y - cameraY > -220) {
+    let x = rand(
+      Math.max(10, top.x - 100),
+      Math.min(W - 80, top.x + 100)
+    );
+
+    const p = {
+      x,
+      y: top.y - 85,
+      w: 70,
+      h: 14
+    };
+
+    platforms.push(p);
+    top = p;
+  }
+
+  platforms = platforms.filter(
+    p => p.y - cameraY < H + 100
+  );
 }
 
 // ============================================================
@@ -316,8 +378,8 @@ function updateHUD() {
 
 function spawnHeart() {
   hearts.push({
-    x: Math.random() * (W - 30),
-    y: cameraY - 500,
+    x: rand(20, W - 40),
+    y: cameraY - 400,
     w: 26,
     h: 26
   });
@@ -347,7 +409,7 @@ function updateHearts() {
 
 function spawnOil() {
   oils.push({
-    x: Math.random() * (W - 30),
+    x: rand(20, W - 40),
     y: cameraY - 300,
     w: 26,
     h: 32
@@ -369,21 +431,6 @@ function updateOils() {
       oils.splice(i, 1);
       spawnOil();
     }
-  }
-}
-
-// ============================================================
-// PLATFORMS
-// ============================================================
-
-function generatePlatforms() {
-  for (let i = 0; i < 8; i++) {
-    platforms.push({
-      x: Math.random() * (W - 80),
-      y: H - i * 90,
-      w: 70,
-      h: 14
-    });
   }
 }
 
@@ -413,7 +460,7 @@ function drawPlatform(p) {
 }
 
 function drawHeart(h) {
-  ctx.fillStyle = "#ff2255";
+  ctx.font = "18px Arial";
   ctx.fillText("❤️", h.x, h.y + 20);
 }
 
@@ -427,7 +474,7 @@ function drawOil(o) {
 }
 
 // ============================================================
-// PLAYER DRAW
+// PLAYER
 // ============================================================
 
 function drawPlayer() {
@@ -444,14 +491,15 @@ function drawPlayer() {
   );
 
   ctx.rotate(player.vx * 0.03);
+  ctx.imageSmoothingEnabled = false;
 
   if (playerImg.complete && playerImg.naturalWidth > 0) {
     ctx.drawImage(
       playerImg,
-      -32,
-      -38,
-      64,
-      76
+      -34,
+      -40,
+      68,
+      80
     );
   } else {
     ctx.fillStyle = "yellow";
@@ -474,7 +522,6 @@ function gameOver() {
   bestScoreEl.textContent = bestScore;
 
   sfx.die();
-
   gameoverScr.classList.add("active");
 }
 
@@ -489,3 +536,11 @@ document.addEventListener("keydown", e => {
 document.addEventListener("keyup", e => {
   keys[e.key] = false;
 });
+
+// ============================================================
+// UTIL
+// ============================================================
+
+function rand(min, max) {
+  return min + Math.random() * (max - min);
+}
