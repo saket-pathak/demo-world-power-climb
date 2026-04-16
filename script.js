@@ -172,7 +172,8 @@ function updatePlayer() {
 // ── Lives ────────────────────────────────────────────────────
 function loseLife() {
   if (player.invincible > 0) return;
-  lives--;
+lives--;
+sfx.die();
   updateHUD();
   if (lives <= 0) { gameOver(); return; }
   player.invincible = 80;
